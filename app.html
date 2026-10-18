@@ -1,0 +1,688 @@
+<title>Juego de acciones</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#2B6E7A">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: one calm screen at a time; in the game, the video on the left and big word buttons on the right (stacked on a portrait phone). */
+:root {
+  --bg: #EDF3F1;
+  --surface: #FFFFFF;
+  --ink: #1D2B2E;
+  --muted: #56696C;
+  --line: #D2DEDA;
+  --accent: #2B6E7A;
+  --accent-ink: #FFFFFF;
+  --answer: #FFD54A;
+  --answer-ink: #2B2200;
+  --wrong: #D63C3C;
+  --right: #1F8E57;
+  --stage: #DCE8E4;
+  --font-word: "Andika", "Atkinson Hyperlegible", "Trebuchet MS", system-ui, sans-serif;
+  --font-ui: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --r: 18px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131B1D; --surface: #1C272A; --ink: #E8F0EE; --muted: #9AAEAB; --line: #2D3C3F;
+    --accent: #6CC0CD; --accent-ink: #0E2226; --answer: #F4C83A; --answer-ink: #231B00;
+    --wrong: #E05656; --right: #2FA56A; --stage: #22302F; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #131B1D; --surface: #1C272A; --ink: #E8F0EE; --muted: #9AAEAB; --line: #2D3C3F;
+  --accent: #6CC0CD; --accent-ink: #0E2226; --answer: #F4C83A; --answer-ink: #231B00;
+  --wrong: #E05656; --right: #2FA56A; --stage: #22302F; color-scheme: dark;
+}
+html, body, #app { height: 100%; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: 17px; line-height: 1.45;
+  -webkit-tap-highlight-color: transparent;
+}
+* { box-sizing: border-box; }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+h1, h2 { font-family: var(--font-word); text-wrap: balance; margin: 0; line-height: 1.15; }
+
+.screen {
+  min-height: 100%; display: flex; flex-direction: column; gap: 20px;
+  padding-block: 20px 28px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  max-width: 980px; margin: 0 auto;
+}
+.bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.bar h2 { font-size: 1.6rem; flex: 1; min-width: 0; }
+.back {
+  border: 2px solid var(--line); background: var(--surface); border-radius: 999px;
+  padding: 8px 16px; font-weight: 700;
+}
+.btn {
+  border: 0; border-radius: 14px; padding: 14px 22px; font-weight: 700; font-size: 1.05rem;
+  background: var(--accent); color: var(--accent-ink);
+}
+.btn.ghost { background: transparent; color: var(--ink); border: 2px solid var(--line); }
+.btn.danger { background: var(--wrong); color: #fff; }
+.btn:disabled { opacity: .45; cursor: default; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+label.field { display: flex; flex-direction: column; gap: 6px; font-weight: 700; }
+label.field span.hint { font-weight: 400; color: var(--muted); font-size: .9rem; }
+input[type=text], input[type=number], select {
+  border: 2px solid var(--line); background: var(--bg); border-radius: 12px; padding: 12px 14px; width: 100%; min-width: 0;
+}
+.msg { color: var(--wrong); font-weight: 700; min-height: 1.4em; margin: 0; }
+.toast {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  background: var(--ink); color: var(--bg); padding: 12px 20px; border-radius: 999px; font-weight: 700;
+  max-width: calc(100% - 32px); text-align: center; z-index: 20;
+}
+
+/* Home */
+.home-head { display: flex; flex-direction: column; gap: 6px; padding-top: 8px; }
+.home-head h1 { font-size: clamp(2.2rem, 7vw, 3.4rem); }
+.home-head p { margin: 0; color: var(--muted); }
+.tiles { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; gap: 16px; }
+.tile {
+  border: 0; border-radius: 24px; padding: 22px; text-align: left; display: flex; flex-direction: column;
+  justify-content: flex-end; gap: 6px; min-height: 150px; background: var(--surface); border: 2px solid var(--line);
+}
+.tile strong { font-family: var(--font-word); font-size: 1.5rem; line-height: 1.1; }
+.tile small { color: var(--muted); font-size: .95rem; }
+.tile .ic { font-size: 2.2rem; line-height: 1; margin-bottom: auto; }
+.tile.play { grid-row: span 2; background: var(--answer); color: var(--answer-ink); border-color: transparent; }
+.tile.play strong { font-size: clamp(2.2rem, 6vw, 3.2rem); }
+.tile.play small { color: var(--answer-ink); opacity: .8; }
+.tile.play .ic { font-size: 4rem; }
+.tile .lock { font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.empty { border: 2px dashed var(--line); border-radius: var(--r); padding: 18px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.empty p { margin: 0; flex: 1 1 260px; }
+@media (max-width: 560px) {
+  .tiles { grid-template-columns: 1fr 1fr; grid-template-rows: auto; }
+  .tile.play { grid-column: span 2; grid-row: auto; min-height: 190px; }
+}
+
+/* Gate */
+.gate { max-width: 460px; width: 100%; margin: 0 auto; text-align: center; }
+.gate .q { font-family: var(--font-word); font-size: clamp(2.6rem, 12vw, 4rem); font-weight: 700; font-variant-numeric: tabular-nums; }
+.gate input { text-align: center; font-size: 2rem; font-variant-numeric: tabular-nums; }
+.gate .row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.shake { animation: shake .35s; }
+@keyframes shake { 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+
+/* Add */
+.pick {
+  border: 2px dashed var(--accent); border-radius: var(--r); padding: 18px; display: flex; flex-direction: column; align-items: center; gap: 10px;
+  text-align: center; font-weight: 700; color: var(--accent); cursor: pointer;
+}
+.pick { position: relative; flex: 1 1 200px; }
+.pick input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.pick-ic { font-size: 2rem; }
+.picks { display: flex; flex-wrap: wrap; gap: 12px; }
+.preview { width: 100%; max-width: 100%; max-height: 42vh; border-radius: 14px; background: #000; object-fit: contain; }
+
+/* Edit list */
+.cat-group { display: flex; flex-direction: column; gap: 10px; }
+.cat-group h3 { margin: 6px 0 0; font-size: .82rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.row-item { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 14px; align-items: start; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px; }
+.row-item .thumb { width: 120px; aspect-ratio: 4/3; max-width: 100%; border-radius: 10px; overflow: hidden; background: var(--stage); }
+.row-item .thumb > * { width: 100%; height: 100%; object-fit: cover; display: block; }
+.row-item .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; min-width: 0; }
+.row-item .actions { grid-column: 1 / -1; display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+.row-item .actions .btn { padding: 10px 16px; font-size: .95rem; }
+@media (max-width: 560px) {
+  .row-item { grid-template-columns: 88px minmax(0, 1fr); }
+  .row-item .thumb { width: 88px; }
+  .row-item .fields { grid-template-columns: 1fr; }
+}
+
+/* Setup */
+.chips { display: flex; flex-wrap: wrap; gap: 10px; }
+.chip { border: 2px solid var(--line); background: var(--bg); border-radius: 999px; padding: 10px 16px; font-weight: 700; }
+.chip small { font-weight: 400; color: var(--muted); margin-left: 4px; font-variant-numeric: tabular-nums; }
+.chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.chip[aria-pressed="true"] small { color: var(--accent-ink); }
+.seg { display: flex; gap: 10px; }
+.seg button { width: 64px; height: 64px; border-radius: 16px; border: 2px solid var(--line); background: var(--bg); font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.seg button:disabled { opacity: .3; cursor: default; }
+.stepper { display: flex; align-items: center; gap: 14px; }
+.stepper button { width: 56px; height: 56px; border-radius: 50%; border: 2px solid var(--line); background: var(--bg); font-size: 1.8rem; font-weight: 700; line-height: 1; }
+.stepper output { font-size: 2rem; font-weight: 700; min-width: 2ch; text-align: center; font-variant-numeric: tabular-nums; }
+.note { color: var(--muted); font-size: .92rem; margin: 0; }
+
+/* Game */
+#s-game { max-width: none; height: 100%; min-height: 0; gap: 14px; padding-block: 12px 16px; }
+.gbar { display: flex; align-items: center; gap: 12px; }
+.dots { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; justify-content: center; }
+.dots i { width: 14px; height: 14px; border-radius: 50%; background: var(--line); }
+.dots i.done { background: var(--right); }
+.dots i.now { background: var(--accent); }
+.stage { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 18px; }
+.media { position: relative; background: var(--stage); border-radius: 24px; overflow: hidden; display: flex; align-items: center; justify-content: center; min-height: 0; }
+.media > video, .media > canvas { width: 100%; height: 100%; object-fit: contain; display: block; }
+.opts { display: flex; flex-direction: column; gap: 14px; justify-content: center; min-height: 0; }
+.opt {
+  border: 0; border-radius: 22px; background: var(--answer); color: var(--answer-ink);
+  font-family: var(--font-word); font-weight: 700; font-size: clamp(1.6rem, 4.2vw, 2.6rem);
+  padding: 8px 18px; min-height: 52px; flex: 0 1 104px; box-shadow: 0 5px 0 rgba(0,0,0,.14);
+  transition: background-color .2s, transform .1s;
+}
+.opt:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,.14); }
+.opt.wrong { background: var(--wrong); color: #fff; }
+.opt.right { background: var(--right); color: #fff; }
+.next {
+  position: absolute; right: 14px; bottom: 14px; border: 0; border-radius: 999px; background: var(--accent); color: var(--accent-ink);
+  font-weight: 700; font-size: 1.6rem; padding: 14px 28px; box-shadow: 0 6px 18px rgba(0,0,0,.25); animation: pop .4s;
+}
+@media (max-aspect-ratio: 4/5), (max-width: 520px) {
+  .stage { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) auto; }
+  .opt { flex-basis: 72px; }
+  .opts { gap: 10px; }
+}
+
+/* End */
+.end { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; text-align: center; }
+.end h1 { font-size: clamp(3.2rem, 14vw, 6rem); color: var(--right); }
+.stars { font-size: 2.4rem; display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-width: 520px; }
+.stars span { animation: pop .5s backwards; }
+@keyframes pop { from { transform: scale(0); } 70% { transform: scale(1.25); } }
+.end .row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+@media (prefers-reduced-motion: reduce) { .stars span, .shake, .next { animation: none; } .opt { transition: none; } }
+</style>
+
+<main id="app">
+  <!-- Inicio -->
+  <section id="s-home" class="screen">
+    <header class="home-head">
+      <h1>¿Qué está haciendo?</h1>
+      <p id="h-summary">Cargando vídeos…</p>
+    </header>
+    <div class="tiles">
+      <button class="tile play" id="go-play" type="button"><span class="ic" aria-hidden="true">▶</span><strong>Jugar</strong><small>Mira el vídeo y elige la palabra</small></button>
+      <button class="tile" id="go-add" type="button"><span class="ic" aria-hidden="true">＋</span><strong>Agregar vídeos</strong><span class="lock">Para mayores</span></button>
+      <button class="tile" id="go-edit" type="button"><span class="ic" aria-hidden="true">✎</span><strong>Modificar o borrar</strong><span class="lock">Para mayores</span></button>
+    </div>
+    <div class="empty" id="h-empty" hidden>
+      <p>Todavía no hay vídeos. Graba acciones con el móvil y añádelas en <b>Agregar vídeos</b>, o prueba ya el juego con cinco animaciones de ejemplo.</p>
+      <button class="btn ghost" id="h-demo" type="button">Cargar ejemplos</button>
+    </div>
+    <p class="note" id="h-storage" hidden></p>
+    <button class="btn ghost" id="h-install" type="button" hidden>Instalar en este dispositivo</button>
+  </section>
+
+  <!-- Candado de mayores -->
+  <section id="s-gate" class="screen" hidden>
+    <div class="bar"><button class="back" data-home type="button">← Inicio</button></div>
+    <form class="panel gate" id="gate-form" novalidate>
+      <p class="note">Para mayores. Resuelve la multiplicación.</p>
+      <div class="q" id="gate-q">7 × 8</div>
+      <input type="number" id="gate-in" inputmode="numeric" autocomplete="off" aria-label="Resultado">
+      <p class="msg" id="gate-msg"></p>
+      <div class="row"><button class="btn" type="submit">Comprobar</button></div>
+    </form>
+  </section>
+
+  <!-- Agregar -->
+  <section id="s-add" class="screen" hidden>
+    <div class="bar"><button class="back" data-home type="button">← Inicio</button><h2>Agregar vídeo</h2></div>
+    <form class="panel" id="add-form" novalidate>
+      <div class="picks">
+        <label class="pick" for="add-file">
+          <span class="pick-ic" aria-hidden="true">🖼️</span>
+          <span id="add-pick-text">Agregar vídeo guardado</span>
+          <input type="file" id="add-file" accept="video/*">
+        </label>
+        <label class="pick" for="add-rec">
+          <span class="pick-ic" aria-hidden="true">🎥</span>
+          <span>Grabar vídeo ahora</span>
+          <input type="file" id="add-rec" accept="video/*" capture="environment">
+        </label>
+      </div>
+      <video class="preview" id="add-preview" muted loop playsinline autoplay hidden></video>
+      <label class="field">Nombre de la acción <span class="hint">Es la palabra que aparecerá en el botón, por ejemplo «Saltar».</span>
+        <input type="text" id="add-name" autocomplete="off" maxlength="40">
+      </label>
+      <label class="field" id="add-cat-wrap">Categoría
+        <select id="add-cat"></select>
+      </label>
+      <label class="field" id="add-newcat-wrap" hidden>Nueva categoría <span class="hint">Por ejemplo «Verbos de casa».</span>
+        <input type="text" id="add-newcat" autocomplete="off" maxlength="40">
+      </label>
+      <p class="msg" id="add-msg"></p>
+      <button class="btn" type="submit" id="add-save">Guardar vídeo</button>
+    </form>
+  </section>
+
+  <!-- Modificar -->
+  <section id="s-edit" class="screen" hidden>
+    <div class="bar"><button class="back" data-home type="button">← Inicio</button><h2>Modificar o borrar</h2></div>
+    <div id="edit-list" class="cat-group"></div>
+  </section>
+
+  <!-- Preparar partida -->
+  <section id="s-setup" class="screen" hidden>
+    <div class="bar"><button class="back" data-home type="button">← Inicio</button><h2>Preparar partida</h2></div>
+    <div class="panel">
+      <div class="field"><b>Categoría</b><div class="chips" id="set-cats"></div></div>
+      <div class="field"><b>Alternativas</b><div class="seg" id="set-alts"></div><p class="note" id="set-alts-note"></p></div>
+      <div class="field"><b>Fases</b>
+        <div class="stepper"><button type="button" id="set-minus" aria-label="Menos fases">−</button><output id="set-phases">5</output><button type="button" id="set-plus" aria-label="Más fases">+</button></div>
+        <p class="note" id="set-phases-note"></p>
+      </div>
+      <button class="btn" id="set-go" type="button" style="font-size:1.3rem;padding:18px">Empezar</button>
+    </div>
+  </section>
+
+  <!-- Juego -->
+  <section id="s-game" class="screen" hidden>
+    <div class="gbar">
+      <button class="back" id="g-exit" type="button">✕ Salir</button>
+      <div class="dots" id="g-dots" aria-label="Progreso"></div>
+    </div>
+    <div class="stage">
+      <div class="media" id="g-media"></div>
+      <div class="opts" id="g-opts"></div>
+    </div>
+  </section>
+
+  <!-- Final -->
+  <section id="s-end" class="screen" hidden>
+    <div class="end">
+      <h1>¡Muy bien!</h1>
+      <div class="stars" id="end-stars"></div>
+      <div class="row">
+        <button class="btn" id="end-again" type="button">Jugar otra vez</button>
+        <button class="btn ghost" data-home type="button">Inicio</button>
+      </div>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(() => {
+'use strict';
+const $ = (s) => document.querySelector(s);
+const norm = (s) => s.trim().replace(/\s+/g, ' ');
+const same = (a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }) === 0;
+const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const sortEs = (a, b) => a.localeCompare(b, 'es');
+
+/* ---------- Almacén en el dispositivo (IndexedDB) ---------- */
+const store = (() => {
+  let db = null;
+  const mem = { meta: new Map(), files: new Map() };
+  function open() {
+    return new Promise((res) => {
+      try {
+        const r = indexedDB.open('juego-acciones', 1);
+        r.onupgradeneeded = () => { r.result.createObjectStore('meta', { keyPath: 'id' }); r.result.createObjectStore('files', { keyPath: 'id' }); };
+        r.onsuccess = () => { db = r.result; res(true); };
+        r.onerror = () => res(false);
+        r.onblocked = () => res(false);
+      } catch (e) { res(false); }
+    });
+  }
+  function run(name, mode, fn) {
+    return new Promise((res, rej) => {
+      const t = db.transaction(name, mode); const req = fn(t.objectStore(name));
+      t.oncomplete = () => res(req ? req.result : undefined); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error);
+    });
+  }
+  return {
+    open,
+    get onDevice() { return !!db; },
+    async metas() { return db ? run('meta', 'readonly', (s) => s.getAll()) : [...mem.meta.values()]; },
+    async putMeta(m) { if (!db) { mem.meta.set(m.id, m); return; } await run('meta', 'readwrite', (s) => s.put(m)); },
+    async putFile(f) { if (!db) { mem.files.set(f.id, f); return; } await run('files', 'readwrite', (s) => s.put(f)); },
+    async file(id) { return db ? run('files', 'readonly', (s) => s.get(id)) : mem.files.get(id); },
+    async remove(id) {
+      if (!db) { mem.meta.delete(id); mem.files.delete(id); return; }
+      await run('meta', 'readwrite', (s) => s.delete(id)); await run('files', 'readwrite', (s) => s.delete(id));
+    },
+  };
+})();
+
+let items = [];          // [{id, name, category, created, demo?}]
+const categories = () => [...new Set(items.map((i) => i.category))].sort(sortEs);
+async function reload() { try { items = await store.metas(); } catch (e) { items = []; } items.sort((a, b) => a.created - b.created); }
+
+/* ---------- Vídeos y animaciones de ejemplo ---------- */
+const urls = new Map();
+let anims = [];
+async function urlFor(id) {
+  if (urls.has(id)) return urls.get(id);
+  const f = await store.file(id); if (!f) return null;
+  const u = URL.createObjectURL(new Blob([f.buf], { type: f.type || 'video/mp4' }));
+  urls.set(id, u); return u;
+}
+function releaseMedia() { anims.forEach((a) => (a.stop = true)); anims = []; urls.forEach((u) => URL.revokeObjectURL(u)); urls.clear(); }
+
+async function mediaFor(item, { thumb = false } = {}) {
+  if (item.demo) return demoCanvas(item.demo, thumb);
+  const v = document.createElement('video');
+  v.muted = true; v.loop = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.setAttribute('muted', '');
+  const u = await urlFor(item.id);
+  if (!u) return v;
+  if (thumb) { v.preload = 'metadata'; v.src = u + '#t=0.1'; }
+  else {
+    v.autoplay = true; v.src = u;
+    v.addEventListener('error', async () => {          // por si el navegador no acepta blob:
+      const f = await store.file(item.id); if (!f || v.dataset.fallback) return;
+      v.dataset.fallback = '1';
+      const r = new FileReader(); r.onload = () => { v.src = r.result; v.play().catch(() => {}); };
+      r.readAsDataURL(new Blob([f.buf], { type: f.type }));
+    }, { once: true });
+    v.play().catch(() => {});
+  }
+  return v;
+}
+
+const DEMOS = [
+  { demo: 'correr', name: 'Correr', category: 'Verbos de paseo' },
+  { demo: 'saltar', name: 'Saltar', category: 'Verbos de paseo' },
+  { demo: 'saludar', name: 'Saludar', category: 'Verbos de paseo' },
+  { demo: 'dormir', name: 'Dormir', category: 'Verbos de casa' },
+  { demo: 'comer', name: 'Comer', category: 'Verbos de casa' },
+];
+function demoCanvas(kind, still) {
+  const c = document.createElement('canvas'); c.width = 640; c.height = 480;
+  const g = c.getContext('2d'); const a = { stop: false }; anims.push(a);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const emoji = (ch, x, y, size, rot = 0) => { g.save(); g.fillStyle = '#000'; g.globalAlpha = 1; g.translate(x, y); g.rotate(rot); g.font = `${size}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(ch, 0, 0); g.restore(); };
+  function draw(t) {
+    g.fillStyle = '#CFE6F2'; g.fillRect(0, 0, 640, 480);
+    g.fillStyle = '#9CCB86'; g.fillRect(0, 380, 640, 100);
+    if (kind === 'correr') {
+      const x = 720 - ((t * 220) % 880); emoji('🏃', x, 300 - Math.abs(Math.sin(t * 12)) * 18, 170);
+    } else if (kind === 'saltar') {
+      const h = Math.abs(Math.sin(t * 3.2)); g.fillStyle = 'rgba(0,0,0,.15)'; g.beginPath(); g.ellipse(320, 388, 80 - h * 40, 14, 0, 0, Math.PI * 2); g.fill();
+      emoji('🧒', 320, 300 - h * 170, 170);
+    } else if (kind === 'saludar') {
+      emoji('🙂', 260, 250, 190); emoji('👋', 450, 200, 140, Math.sin(t * 7) * 0.45);
+    } else if (kind === 'dormir') {
+      g.fillStyle = '#2E3A66'; g.fillRect(0, 0, 640, 380); emoji('🌙', 540, 80, 80); emoji('🛌', 300, 300, 200);
+      for (let i = 0; i < 3; i++) { const p = (t * 0.5 + i / 3) % 1; g.globalAlpha = 1 - p; g.fillStyle = '#fff'; g.font = `bold ${36 + p * 40}px sans-serif`; g.fillText('z', 400 + p * 90, 210 - p * 150); g.globalAlpha = 1; }
+    } else if (kind === 'comer') {
+      emoji('😋', 250, 250, 210); const p = (t * 0.6) % 1; const k = p < 0.7 ? p / 0.7 : 1;
+      if (p < 0.85) emoji('🍎', 520 - k * 190, 290 - Math.sin(k * Math.PI) * 60, 110 * (1 - k * 0.6));
+    }
+  }
+  if (still || reduce) draw(0.4);
+  else { const t0 = performance.now(); const loop = (now) => { if (a.stop || (!c.isConnected && now - t0 > 2000)) return; draw((now - t0) / 1000); requestAnimationFrame(loop); }; requestAnimationFrame(loop); }
+  return c;
+}
+
+/* ---------- Sonidos y voz ---------- */
+let ac = null, noise = null;
+function audio() {
+  if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
+  if (ac.state === 'suspended') ac.resume();
+  if (!noise) { noise = ac.createBuffer(1, ac.sampleRate, ac.sampleRate); const d = noise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+  return ac;
+}
+document.addEventListener('pointerdown', audio, { once: true });
+
+function ohOh() {
+  const a = audio(); if (!a) return;
+  const out = a.createGain(); out.gain.value = 0.55; out.connect(a.destination);
+  [[0, 330, 0.26], [0.36, 247, 0.42]].forEach(([at, f, dur]) => {
+    const t = a.currentTime + at; const o = a.createOscillator(); o.type = 'sawtooth';
+    o.frequency.setValueAtTime(f, t); o.frequency.linearRampToValueAtTime(f * 0.9, t + dur);
+    const env = a.createGain(); env.gain.setValueAtTime(0, t); env.gain.linearRampToValueAtTime(1, t + 0.04); env.gain.setValueAtTime(1, t + dur - 0.08); env.gain.linearRampToValueAtTime(0, t + dur);
+    [[520, 6, 1], [880, 7, 0.5]].forEach(([ff, q, gv]) => { const b = a.createBiquadFilter(); b.type = 'bandpass'; b.frequency.value = ff; b.Q.value = q; const gg = a.createGain(); gg.gain.value = gv * 3; o.connect(b); b.connect(gg); gg.connect(env); });
+    env.connect(out); o.start(t); o.stop(t + dur + 0.05);
+  });
+}
+function applause(len = 1.8) {
+  const a = audio(); if (!a) return;
+  const out = a.createGain(); out.connect(a.destination); const t0 = a.currentTime;
+  out.gain.setValueAtTime(0.9, t0); out.gain.setValueAtTime(0.9, t0 + len * 0.6); out.gain.linearRampToValueAtTime(0, t0 + len);
+  for (let i = 0; i < len * 45; i++) {
+    const t = t0 + Math.random() * len; const s = a.createBufferSource(); s.buffer = noise;
+    const b = a.createBiquadFilter(); b.type = 'bandpass'; b.frequency.value = 900 + Math.random() * 2200; b.Q.value = 1.2;
+    const e = a.createGain(); const d = 0.02 + Math.random() * 0.03; e.gain.setValueAtTime(0, t); e.gain.linearRampToValueAtTime(0.35 + Math.random() * 0.4, t + 0.003); e.gain.exponentialRampToValueAtTime(0.001, t + d);
+    s.connect(b); b.connect(e); e.connect(out); s.start(t, Math.random() * 0.8, d + 0.01);
+  }
+}
+let voice = null;
+function pickVoice() { try { const v = speechSynthesis.getVoices(); voice = v.find((x) => /^es[-_]ES/i.test(x.lang)) || v.find((x) => /^es/i.test(x.lang)) || null; } catch (e) {} }
+if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function speak(text) {
+  return new Promise((res) => {
+    if (!('speechSynthesis' in window)) return res();
+    try {
+      speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang = voice ? voice.lang : 'es-ES'; if (voice) u.voice = voice; u.rate = 0.85;
+      let done = false; const fin = () => { if (!done) { done = true; res(); } };
+      u.onend = fin; u.onerror = fin; setTimeout(fin, 2200); speechSynthesis.speak(u);
+    } catch (e) { res(); }
+  });
+}
+
+/* ---------- Navegación ---------- */
+function show(id) {
+  document.querySelectorAll('.screen').forEach((s) => (s.hidden = s.id !== id));
+  if (id !== 's-game' && id !== 's-edit' && id !== 's-add') releaseMedia();
+  window.scrollTo(0, 0);
+}
+let toastTimer;
+function toast(text) { const t = $('#toast'); t.textContent = text; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.hidden = true), 2600); }
+document.addEventListener('click', (e) => { if (e.target.closest('[data-home]')) goHome(); });
+
+async function goHome() {
+  await reload(); show('s-home');
+  const cats = categories();
+  $('#h-summary').textContent = items.length ? `${items.length} ${items.length === 1 ? 'vídeo' : 'vídeos'} en ${cats.length} ${cats.length === 1 ? 'categoría' : 'categorías'}.` : 'Mira el vídeo y toca la palabra que dice lo que pasa.';
+  $('#h-empty').hidden = items.length > 0;
+  const st = $('#h-storage'); st.hidden = store.onDevice; st.textContent = 'Este navegador no deja guardar datos aquí: los vídeos se perderán al cerrar la página.';
+}
+
+/* ---------- Candado de mayores ---------- */
+let gateTarget = null, gateAnswer = 0;
+function newProblem() { const a = 3 + Math.floor(Math.random() * 7), b = 3 + Math.floor(Math.random() * 7); gateAnswer = a * b; $('#gate-q').textContent = `${a} × ${b}`; $('#gate-in').value = ''; }
+function openGate(target) { gateTarget = target; newProblem(); $('#gate-msg').textContent = ''; show('s-gate'); setTimeout(() => $('#gate-in').focus(), 50); }
+$('#gate-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  if (Number($('#gate-in').value) === gateAnswer) { gateTarget(); return; }
+  const f = $('#gate-form'); f.classList.remove('shake'); void f.offsetWidth; f.classList.add('shake');
+  $('#gate-msg').textContent = 'No es correcto. Prueba con esta otra.'; newProblem(); $('#gate-in').focus();
+});
+$('#go-add').addEventListener('click', () => openGate(openAdd));
+$('#go-edit').addEventListener('click', () => openGate(openEdit));
+
+/* ---------- Categoría: elegir existente o crear ---------- */
+const NEW = '__nueva__';
+function fillCatSelect(sel, current) {
+  sel.innerHTML = '';
+  categories().forEach((c) => sel.add(new Option(c, c, false, c === current)));
+  sel.add(new Option('＋ Nueva categoría…', NEW));
+  if (!current && !categories().length) sel.value = NEW;
+}
+function resolveCat(sel, input) {
+  const raw = sel.value === NEW ? norm(input.value) : sel.value;
+  if (!raw) return '';
+  return categories().find((c) => same(c, raw)) || raw;  // reutiliza la existente aunque cambien mayúsculas
+}
+
+/* ---------- Agregar ---------- */
+let addFile = null;
+function openAdd() {
+  show('s-add'); addFile = null;
+  $('#add-form').reset(); $('#add-preview').hidden = true; $('#add-preview').removeAttribute('src');
+  $('#add-pick-text').textContent = 'Agregar vídeo guardado'; $('#add-msg').textContent = '';
+  fillCatSelect($('#add-cat'), categories()[0]); syncAddCat();
+}
+function syncAddCat() { const none = !categories().length; $('#add-cat-wrap').hidden = none; $('#add-newcat-wrap').hidden = !(none || $('#add-cat').value === NEW); }
+$('#add-cat').addEventListener('change', () => { syncAddCat(); if ($('#add-cat').value === NEW) $('#add-newcat').focus(); });
+function onVideoPicked(e) {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  addFile = f; const p = $('#add-preview'); if (p.src) URL.revokeObjectURL(p.src);
+  p.src = URL.createObjectURL(f); p.hidden = false; p.play().catch(() => {});
+  $('#add-msg').textContent = '';
+}
+$('#add-file').addEventListener('change', onVideoPicked);
+$('#add-rec').addEventListener('change', onVideoPicked);
+$('#add-form').addEventListener('submit', async (e) => {
+  e.preventDefault(); const msg = $('#add-msg'); msg.textContent = '';
+  const name = norm($('#add-name').value); const cat = resolveCat($('#add-cat'), $('#add-newcat'));
+  if (!addFile) return (msg.textContent = 'Elige un vídeo primero.');
+  if (!name) return (msg.textContent = 'Escribe el nombre de la acción.');
+  if (!cat) return (msg.textContent = 'Elige una categoría o escribe una nueva.');
+  const btn = $('#add-save'); btn.disabled = true; btn.textContent = 'Guardando…';
+  try {
+    const id = uid(); const buf = await addFile.arrayBuffer();
+    await store.putFile({ id, buf, type: addFile.type || 'video/mp4' });
+    await store.putMeta({ id, name, category: cat, created: Date.now() });
+    try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (_) {}
+    await reload(); toast(`Guardado «${name}» en ${cat}`); openAdd();
+  } catch (err) {
+    msg.textContent = 'No se pudo guardar. Puede que no quede espacio en el dispositivo; prueba con un vídeo más corto.';
+  } finally { btn.disabled = false; btn.textContent = 'Guardar vídeo'; }
+});
+
+/* ---------- Modificar o borrar ---------- */
+async function openEdit() {
+  await reload(); show('s-edit'); releaseMedia();
+  const list = $('#edit-list'); list.innerHTML = '';
+  if (!items.length) { list.innerHTML = '<div class="empty"><p>No hay vídeos guardados todavía.</p></div>'; return; }
+  for (const cat of categories()) {
+    const h = document.createElement('h3'); h.textContent = cat; list.append(h);
+    for (const it of items.filter((i) => i.category === cat)) list.append(await editRow(it));
+  }
+}
+async function editRow(it) {
+  const row = document.createElement('div'); row.className = 'row-item';
+  const thumb = document.createElement('div'); thumb.className = 'thumb'; thumb.append(await mediaFor(it, { thumb: true }));
+  const f = document.createElement('div'); f.className = 'fields';
+  f.innerHTML = `<label class="field">Nombre<input type="text" maxlength="40" id="n-${it.id}"></label>
+    <label class="field">Categoría<select id="c-${it.id}"></select></label>
+    <label class="field" hidden id="w-${it.id}">Nueva categoría<input type="text" maxlength="40" id="nc-${it.id}"></label>
+    <p class="msg" style="grid-column:1/-1;min-height:0" id="m-${it.id}"></p>
+    <div class="actions"><button class="btn ghost" type="button" data-act="del">Borrar</button><button class="btn" type="button" data-act="save" disabled>Guardar cambios</button></div>`;
+  row.append(thumb, f);
+  const name = f.querySelector('input[type=text]'), sel = f.querySelector('select'), wrap = f.querySelector(`#w-${it.id}`), nc = wrap.querySelector('input');
+  const save = f.querySelector('[data-act=save]'), del = f.querySelector('[data-act=del]'), msg = f.querySelector('.msg');
+  name.value = it.name; fillCatSelect(sel, it.category);
+  const dirty = () => { save.disabled = norm(name.value) === it.name && sel.value === it.category; };
+  name.addEventListener('input', dirty);
+  sel.addEventListener('change', () => { wrap.hidden = sel.value !== NEW; if (!wrap.hidden) nc.focus(); dirty(); });
+  save.addEventListener('click', async () => {
+    const n = norm(name.value), c = resolveCat(sel, nc);
+    if (!n) return (msg.textContent = 'El nombre no puede quedar vacío.');
+    if (!c) return (msg.textContent = 'Escribe el nombre de la nueva categoría.');
+    const before = it.category;
+    await store.putMeta({ ...it, name: n, category: c }); await reload();
+    const gone = before !== c && !items.some((i) => i.category === before);
+    toast(gone ? `Guardado. La categoría «${before}» se ha quedado vacía y se ha borrado.` : 'Cambios guardados'); openEdit();
+  });
+  let armed = false;
+  del.addEventListener('click', async () => {
+    if (!armed) { armed = true; del.textContent = '¿Borrar «' + it.name + '»? Toca otra vez'; del.className = 'btn danger'; setTimeout(() => { if (armed) { armed = false; del.textContent = 'Borrar'; del.className = 'btn ghost'; } }, 4000); return; }
+    const before = it.category; await store.remove(it.id); await reload();
+    toast(items.some((i) => i.category === before) ? `Borrado «${it.name}»` : `Borrado «${it.name}». La categoría «${before}» se ha quedado vacía y se ha borrado.`); openEdit();
+  });
+  return row;
+}
+
+/* ---------- Preparar partida ---------- */
+const setup = { cat: null, alts: 3, phases: 5 };
+try { Object.assign(setup, JSON.parse(localStorage.getItem('juego-acciones-ajustes') || '{}')); } catch (e) {}
+const poolOf = (cat) => (cat === null ? items : items.filter((i) => i.category === cat));
+const namesOf = (pool) => { const out = []; pool.forEach((i) => { if (!out.some((n) => same(n, i.name))) out.push(i.name); }); return out; };
+
+$('#go-play').addEventListener('click', async () => {
+  await reload();
+  if (!items.length) { toast('Primero hay que agregar vídeos o cargar los ejemplos.'); return; }
+  if (setup.cat !== null && !categories().includes(setup.cat)) setup.cat = null;
+  renderSetup(); show('s-setup');
+});
+function renderSetup() {
+  const cats = $('#set-cats'); cats.innerHTML = '';
+  [[null, 'Todos'], ...categories().map((c) => [c, c])].forEach(([val, label]) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.setAttribute('aria-pressed', String(setup.cat === val));
+    b.textContent = label; const s = document.createElement('small'); s.textContent = poolOf(val).length; b.append(s);
+    b.addEventListener('click', () => { setup.cat = val; renderSetup(); }); cats.append(b);
+  });
+  const pool = poolOf(setup.cat), maxAlts = Math.max(1, Math.min(4, namesOf(pool).length));
+  setup.alts = Math.min(Math.max(1, setup.alts), maxAlts);
+  const seg = $('#set-alts'); seg.innerHTML = '';
+  for (let n = 1; n <= 4; n++) {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = n; b.disabled = n > maxAlts; b.setAttribute('aria-pressed', String(setup.alts === n));
+    b.addEventListener('click', () => { setup.alts = n; renderSetup(); }); seg.append(b);
+  }
+  $('#set-alts-note').textContent = maxAlts < 4 ? `Esta categoría tiene ${maxAlts} ${maxAlts === 1 ? 'acción distinta' : 'acciones distintas'}, así que se pueden mostrar hasta ${maxAlts} botones.` : (setup.alts === 1 ? 'Con 1 alternativa siempre acierta.' : '');
+  setup.phases = Math.min(Math.max(1, setup.phases), pool.length);
+  $('#set-phases').textContent = setup.phases;
+  $('#set-minus').disabled = setup.phases <= 1; $('#set-plus').disabled = setup.phases >= pool.length;
+  $('#set-phases-note').textContent = `Como mucho ${pool.length}, uno por cada vídeo.`;
+  try { localStorage.setItem('juego-acciones-ajustes', JSON.stringify(setup)); } catch (e) {}
+}
+$('#set-minus').addEventListener('click', () => { setup.phases--; renderSetup(); });
+$('#set-plus').addEventListener('click', () => { setup.phases++; renderSetup(); });
+$('#set-go').addEventListener('click', () => startGame());
+
+/* ---------- Juego ---------- */
+const game = { rounds: [], idx: 0, solved: false };
+function startGame() {
+  const pool = poolOf(setup.cat), names = namesOf(pool);
+  game.rounds = shuffle(pool).slice(0, setup.phases).map((it) => {
+    const others = shuffle(names.filter((n) => !same(n, it.name))).slice(0, setup.alts - 1);
+    return { item: it, options: shuffle([it.name, ...others]) };
+  });
+  game.idx = 0; show('s-game'); renderRound();
+}
+async function renderRound() {
+  releaseMedia(); game.solved = false;
+  const r = game.rounds[game.idx];
+  const dots = $('#g-dots'); dots.innerHTML = '';
+  game.rounds.forEach((_, i) => { const d = document.createElement('i'); d.className = i < game.idx ? 'done' : i === game.idx ? 'now' : ''; dots.append(d); });
+  const media = $('#g-media'); media.innerHTML = ''; media.append(await mediaFor(r.item));
+  const opts = $('#g-opts'); opts.innerHTML = '';
+  r.options.forEach((name) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'opt'; b.textContent = name;
+    b.addEventListener('click', () => answer(b, name, r)); opts.append(b);
+  });
+}
+async function answer(btn, name, r) {
+  if (game.solved || btn.classList.contains('wrong')) { speak(name); return; }
+  const ok = same(name, r.item.name);
+  if (ok) {
+    game.solved = true; btn.classList.add('right');
+    await speak(name); applause();
+    const last = game.idx === game.rounds.length - 1;
+    const next = document.createElement('button'); next.type = 'button'; next.className = 'next'; next.textContent = last ? 'Terminar ★' : 'Siguiente →';
+    next.addEventListener('click', () => { if (last) finish(); else { game.idx++; renderRound(); } });
+    $('#g-media').append(next);
+  } else {
+    btn.classList.add('wrong'); await speak(name); ohOh();
+  }
+}
+function finish() {
+  releaseMedia(); show('s-end');
+  const s = $('#end-stars'); s.innerHTML = '';
+  game.rounds.forEach((_, i) => { const st = document.createElement('span'); st.textContent = '⭐'; st.style.animationDelay = `${0.15 + i * 0.12}s`; s.append(st); });
+  applause(2.4); setTimeout(() => speak('¡Muy bien!'), 300);
+}
+$('#g-exit').addEventListener('click', goHome);
+$('#end-again').addEventListener('click', () => { reload().then(startGame); });
+
+/* ---------- Ejemplos ---------- */
+$('#h-demo').addEventListener('click', async () => {
+  let t = Date.now();
+  for (const d of DEMOS) await store.putMeta({ id: uid(), name: d.name, category: d.category, demo: d.demo, created: t++ });
+  toast('Ejemplos cargados. Se pueden borrar en «Modificar o borrar».'); goHome();
+});
+
+/* ---------- Instalación (cuando la app se sirve como web propia) ---------- */
+let installEvt = null;
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvt = e; $('#h-install').hidden = false; });
+$('#h-install').addEventListener('click', async () => { if (!installEvt) return; installEvt.prompt(); await installEvt.userChoice; installEvt = null; $('#h-install').hidden = true; });
+if ('serviceWorker' in navigator && document.querySelector('link[rel=manifest]')) { navigator.serviceWorker.register('sw.js').catch(() => {}); }
+
+store.open().then(goHome);
+})();
+</script>
