@@ -32,22 +32,24 @@
   --font-word: "Andika", "Atkinson Hyperlegible", "Trebuchet MS", system-ui, sans-serif;
   --font-ui: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
   --r: 18px;
+  --sky: #CFE7F3;
+  --cloud: rgba(255,255,255,.85);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #131B1D; --surface: #1C272A; --ink: #E8F0EE; --muted: #9AAEAB; --line: #2D3C3F;
     --accent: #6CC0CD; --accent-ink: #0E2226; --answer: #F4C83A; --answer-ink: #231B00;
-    --wrong: #E05656; --right: #2FA56A; --stage: #22302F; color-scheme: dark;
+    --wrong: #E05656; --right: #2FA56A; --stage: #22302F; --sky: #1B2D3A; --cloud: rgba(255,255,255,.06); color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #131B1D; --surface: #1C272A; --ink: #E8F0EE; --muted: #9AAEAB; --line: #2D3C3F;
   --accent: #6CC0CD; --accent-ink: #0E2226; --answer: #F4C83A; --answer-ink: #231B00;
-  --wrong: #E05656; --right: #2FA56A; --stage: #22302F; color-scheme: dark;
+  --wrong: #E05656; --right: #2FA56A; --stage: #22302F; --sky: #1B2D3A; --cloud: rgba(255,255,255,.06); color-scheme: dark;
 }
 html, body, #app { height: 100%; }
 body {
-  background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: 17px; line-height: 1.45;
+  background: var(--bg) linear-gradient(180deg, var(--sky) 0, var(--bg) 340px) no-repeat; color: var(--ink); font-family: var(--font-ui); font-size: 17px; line-height: 1.45;
   -webkit-tap-highlight-color: transparent;
 }
 * { box-sizing: border-box; }
@@ -87,25 +89,46 @@ input[type=text], input[type=number], select {
   position: fixed; left: 50%; transform: translateX(-50%);
   bottom: calc(20px + env(safe-area-inset-bottom, 0px));
   background: var(--ink); color: var(--bg); padding: 12px 20px; border-radius: 999px; font-weight: 700;
-  max-width: calc(100% - 32px); text-align: center; z-index: 20;
+  width: max-content; max-width: calc(100% - 32px); text-align: center; z-index: 20;
 }
 
 /* Home */
-.home-head { display: flex; flex-direction: column; gap: 6px; padding-top: 8px; }
-.home-head h1 { font-size: clamp(2.2rem, 7vw, 3.4rem); }
+.home-head { position: relative; display: flex; align-items: center; gap: 18px; padding-top: 8px; }
+.home-head > div { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.home-head h1 { font-size: clamp(2.1rem, 7vw, 3.4rem); }
 .home-head p { margin: 0; color: var(--muted); }
+.home-head::before, .home-head::after { content: ""; position: absolute; z-index: -1; border-radius: 999px; background: var(--cloud); }
+.home-head::before { width: 160px; height: 46px; right: 6%; top: -4px; box-shadow: 40px -18px 0 -6px var(--cloud); }
+.home-head::after { width: 110px; height: 34px; right: 34%; top: 92px; }
+.mono { width: clamp(88px, 22vw, 128px); flex: none; }
+.end .mono { width: clamp(130px, 34vw, 180px); }
+.mono svg { width: 100%; height: auto; display: block; overflow: visible; }
+.mono .eyes { transform-origin: 60px 44px; animation: blink 5s infinite; }
+@keyframes blink { 0%, 94%, 100% { transform: scaleY(1); } 97% { transform: scaleY(.1); } }
+.mono .wing { transform-box: fill-box; }
+.mono .wl { transform-origin: 100% 100%; } .mono .wr { transform-origin: 0% 100%; }
+.mono.cheer .wl { animation: flapL .5s ease-in-out 6 alternate; }
+.mono.cheer .wr { animation: flapR .5s ease-in-out 6 alternate; }
+@keyframes flapL { to { transform: rotate(18deg); } }
+@keyframes flapR { to { transform: rotate(-18deg); } }
+.mono.hop { animation: hop .45s ease-out 2; }
+@keyframes hop { 50% { transform: translateY(-14px); } }
 .tiles { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; gap: 16px; }
 .tile {
+  position: relative; overflow: hidden; box-shadow: 0 6px 0 var(--line); transition: transform .12s;
   border: 0; border-radius: 24px; padding: 22px; text-align: left; display: flex; flex-direction: column;
   justify-content: flex-end; gap: 6px; min-height: 150px; background: var(--surface); border: 2px solid var(--line);
 }
 .tile strong { font-family: var(--font-word); font-size: 1.5rem; line-height: 1.1; }
 .tile small { color: var(--muted); font-size: .95rem; }
-.tile .ic { font-size: 2.2rem; line-height: 1; margin-bottom: auto; }
-.tile.play { grid-row: span 2; background: var(--answer); color: var(--answer-ink); border-color: transparent; }
+.tile:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--line); }
+.tile .ic { width: 52px; height: 52px; margin-bottom: auto; color: var(--accent); }
+.tile .ic svg { width: 100%; height: 100%; display: block; }
+.tile.play { grid-row: span 2; background: var(--answer); color: var(--answer-ink); border-color: transparent; box-shadow: 0 6px 0 #D9A92A; }
+.tile.play::after { content: ""; position: absolute; right: -60px; bottom: -60px; width: 220px; height: 220px; border-radius: 50%; background: rgba(255,255,255,.25); }
 .tile.play strong { font-size: clamp(2.2rem, 6vw, 3.2rem); }
 .tile.play small { color: var(--answer-ink); opacity: .8; }
-.tile.play .ic { font-size: 4rem; }
+.tile.play .ic { width: 96px; height: 96px; color: var(--answer-ink); }
 .tile .lock { font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .empty { border: 2px dashed var(--line); border-radius: var(--r); padding: 18px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
 .empty p { margin: 0; flex: 1 1 260px; }
@@ -175,12 +198,12 @@ input[type=text], input[type=number], select {
 .media > video, .media > canvas { width: 100%; height: 100%; object-fit: contain; display: block; }
 .opts { display: flex; flex-direction: column; gap: 14px; justify-content: center; min-height: 0; }
 .opt {
-  border: 0; border-radius: 22px; background: var(--answer); color: var(--answer-ink);
+  border: 0; border-radius: 16px; background: var(--answer); color: var(--answer-ink);
   font-family: var(--font-word); font-weight: 700; font-size: clamp(1.6rem, 4.2vw, 2.6rem);
-  padding: 8px 18px; min-height: 52px; flex: 0 1 104px; box-shadow: 0 5px 0 rgba(0,0,0,.14);
+  padding: 8px 18px; min-height: 52px; flex: 0 1 104px;
   transition: background-color .2s, transform .1s;
 }
-.opt:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,.14); }
+.opt:active { transform: scale(.98); }
 .opt.wrong { background: var(--wrong); color: #fff; }
 .opt.right { background: var(--right); color: #fff; }
 .next {
@@ -200,20 +223,23 @@ input[type=text], input[type=number], select {
 .stars span { animation: pop .5s backwards; }
 @keyframes pop { from { transform: scale(0); } 70% { transform: scale(1.25); } }
 .end .row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
-@media (prefers-reduced-motion: reduce) { .stars span, .shake, .next { animation: none; } .opt { transition: none; } }
+.confetti { position: fixed; inset: 0; pointer-events: none; z-index: 15; width: 100%; height: 100%; }
+.chip .cdot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; vertical-align: -1px; }
+.cat-group h3 .cdot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; }
+@media (prefers-reduced-motion: reduce) { .stars span, .shake, .next, .mono .eyes, .mono.cheer .wing, .mono.hop { animation: none; } .tile { transition: none; } .opt { transition: none; } }
 </style>
 
 <main id="app">
   <!-- Inicio -->
   <section id="s-home" class="screen">
     <header class="home-head">
-      <h1>¿Qué está haciendo?</h1>
-      <p id="h-summary">Cargando vídeos…</p>
+      <div class="mono" id="mono-home"></div>
+      <div><h1>¿Qué está haciendo?</h1><p id="h-summary">Cargando vídeos…</p></div>
     </header>
     <div class="tiles">
-      <button class="tile play" id="go-play" type="button"><span class="ic" aria-hidden="true">▶</span><strong>Jugar</strong><small>Mira el vídeo y elige la palabra</small></button>
-      <button class="tile" id="go-add" type="button"><span class="ic" aria-hidden="true">＋</span><strong>Agregar vídeos</strong><span class="lock">Para mayores</span></button>
-      <button class="tile" id="go-edit" type="button"><span class="ic" aria-hidden="true">✎</span><strong>Modificar o borrar</strong><span class="lock">Para mayores</span></button>
+      <button class="tile play" id="go-play" type="button"><span class="ic" aria-hidden="true"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="22" fill="currentColor" opacity=".12"/><path d="M19 14v20l16-10z" fill="currentColor"/></svg></span><strong>Jugar</strong><small>Mira el vídeo y elige la palabra</small></button>
+      <button class="tile" id="go-add" type="button"><span class="ic" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="12" width="28" height="24" rx="6"/><path d="M32 21l11-6v18l-11-6"/><path d="M18 18v12M12 24h12"/></svg></span><strong>Agregar vídeos</strong><span class="lock">Para mayores</span></button>
+      <button class="tile" id="go-edit" type="button"><span class="ic" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 38l3-10L31 10a4 4 0 0 1 7 7L20 35z"/><path d="M28 13l7 7"/><path d="M26 40h14"/></svg></span><strong>Modificar o borrar</strong><span class="lock">Para mayores</span></button>
     </div>
     <div class="empty" id="h-empty" hidden>
       <p>Todavía no hay vídeos. Graba acciones con el móvil y añádelas en <b>Agregar vídeos</b>, o prueba ya el juego con cinco animaciones de ejemplo.</p>
@@ -301,6 +327,7 @@ input[type=text], input[type=number], select {
   <!-- Final -->
   <section id="s-end" class="screen" hidden>
     <div class="end">
+      <div class="mono" id="mono-end"></div>
       <h1>¡Muy bien!</h1>
       <div class="stars" id="end-stars"></div>
       <div class="row">
@@ -560,7 +587,7 @@ async function openEdit() {
   const list = $('#edit-list'); list.innerHTML = '';
   if (!items.length) { list.innerHTML = '<div class="empty"><p>No hay vídeos guardados todavía.</p></div>'; return; }
   for (const cat of categories()) {
-    const h = document.createElement('h3'); h.textContent = cat; list.append(h);
+    const h = document.createElement('h3'); h.append(catDot(cat), cat); list.append(h);
     for (const it of items.filter((i) => i.category === cat)) list.append(await editRow(it));
   }
 }
@@ -614,7 +641,7 @@ function renderSetup() {
   const cats = $('#set-cats'); cats.innerHTML = '';
   [[null, 'Todos'], ...categories().map((c) => [c, c])].forEach(([val, label]) => {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.setAttribute('aria-pressed', String(setup.cat === val));
-    b.textContent = label; const s = document.createElement('small'); s.textContent = poolOf(val).length; b.append(s);
+    if (val !== null) b.append(catDot(val)); b.append(label); const s = document.createElement('small'); s.textContent = poolOf(val).length; b.append(s);
     b.addEventListener('click', () => { setup.cat = val; renderSetup(); }); cats.append(b);
   });
   const pool = poolOf(setup.cat), maxAlts = Math.max(1, Math.min(4, namesOf(pool).length));
@@ -675,9 +702,45 @@ function finish() {
   releaseMedia(); show('s-end');
   const s = $('#end-stars'); s.innerHTML = '';
   game.rounds.forEach((_, i) => { const st = document.createElement('span'); st.textContent = '⭐'; st.style.animationDelay = `${0.15 + i * 0.12}s`; s.append(st); });
-  applause(2.4); setTimeout(() => speak('¡Muy bien!'), 300);
+  const mono = $('#mono-end'); mono.classList.remove('cheer', 'hop'); void mono.offsetWidth; mono.classList.add('cheer', 'hop');
+  applause(2.4); confetti(); setTimeout(() => speak('¡Muy bien!'), 300);
 }
 $('#g-exit').addEventListener('click', goHome);
+
+/* ---------- Adornos: mono, colores de categoría y confeti ---------- */
+const MONO = `<svg viewBox="0 0 120 128" aria-hidden="true">
+  <g class="wing wl"><path d="M38 96 Q16 92 12 70" stroke="#8B5A3C" stroke-width="11" fill="none" stroke-linecap="round"/><circle cx="12" cy="68" r="7" fill="#F1D3A8"/></g>
+  <g class="wing wr"><path d="M82 96 Q104 92 108 70" stroke="#8B5A3C" stroke-width="11" fill="none" stroke-linecap="round"/><circle cx="108" cy="68" r="7" fill="#F1D3A8"/></g>
+  <ellipse cx="60" cy="104" rx="25" ry="21" fill="#8B5A3C"/>
+  <ellipse cx="60" cy="108" rx="14" ry="12" fill="#F1D3A8"/>
+  <circle cx="21" cy="46" r="15" fill="#8B5A3C"/><circle cx="21" cy="46" r="8" fill="#F1D3A8"/>
+  <circle cx="99" cy="46" r="15" fill="#8B5A3C"/><circle cx="99" cy="46" r="8" fill="#F1D3A8"/>
+  <circle cx="60" cy="46" r="38" fill="#8B5A3C"/>
+  <path d="M60 30 C50 18 26 22 29 42 C19 52 24 78 60 78 C96 78 101 52 91 42 C94 22 70 18 60 30 Z" fill="#F1D3A8"/>
+  <g class="eyes"><circle cx="47" cy="44" r="6.5" fill="#1D2B2E"/><circle cx="73" cy="44" r="6.5" fill="#1D2B2E"/>
+  <circle cx="49" cy="42" r="2" fill="#fff"/><circle cx="75" cy="42" r="2" fill="#fff"/></g>
+  <circle cx="37" cy="60" r="5" fill="#F29C9C" opacity=".6"/><circle cx="83" cy="60" r="5" fill="#F29C9C" opacity=".6"/>
+  <circle cx="56" cy="55" r="1.8" fill="#5C3A24"/><circle cx="64" cy="55" r="1.8" fill="#5C3A24"/>
+  <path d="M45 62 Q60 78 75 62 Z" fill="#5C3A24"/><path d="M52 68 Q60 74 68 68 Q60 66 52 68 Z" fill="#F07C7C"/>
+</svg>`;
+$('#mono-home').innerHTML = MONO; $('#mono-end').innerHTML = MONO;
+const CAT_COLORS = ['#F59E8B', '#7CC4E4', '#8DCB7E', '#F4C430', '#B79CE6', '#F29CC3', '#6FD0BF'];
+function catColor(name) { let h = 0; for (const ch of name) h = (h * 31 + ch.codePointAt(0)) >>> 0; return CAT_COLORS[h % CAT_COLORS.length]; }
+function catDot(name) { const d = document.createElement('span'); d.className = 'cdot'; d.style.background = catColor(name); return d; }
+function confetti(from) {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const c = document.createElement('canvas'); c.className = 'confetti'; document.body.append(c);
+  const W = c.width = innerWidth, H = c.height = innerHeight, g = c.getContext('2d');
+  const r = from ? from.getBoundingClientRect() : { left: W / 2 - 1, top: H / 3, width: 2, height: 2 };
+  const ox = r.left + r.width / 2, oy = r.top + r.height / 2;
+  const parts = Array.from({ length: from ? 40 : 90 }, () => ({ x: ox, y: oy, vx: (Math.random() - .5) * 14, vy: -Math.random() * 12 - 4, s: 6 + Math.random() * 6, a: Math.random() * 6, va: (Math.random() - .5) * .4, col: CAT_COLORS[Math.floor(Math.random() * CAT_COLORS.length)] }));
+  const t0 = performance.now();
+  (function tick(now) {
+    const t = now - t0; g.clearRect(0, 0, W, H);
+    parts.forEach((p) => { p.vy += .45; p.x += p.vx; p.y += p.vy; p.a += p.va; g.save(); g.globalAlpha = Math.max(0, 1 - t / 1600); g.translate(p.x, p.y); g.rotate(p.a); g.fillStyle = p.col; g.fillRect(-p.s / 2, -p.s / 3, p.s, p.s * .66); g.restore(); });
+    if (t < 1600) requestAnimationFrame(tick); else c.remove();
+  })(t0);
+}
 $('#end-again').addEventListener('click', () => { reload().then(startGame); });
 
 /* ---------- Ejemplos ---------- */
