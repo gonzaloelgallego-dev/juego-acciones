@@ -132,10 +132,35 @@ input[type=text], input[type=number], select {
 .tile .lock { font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .empty { border: 2px dashed var(--line); border-radius: var(--r); padding: 18px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
 .empty p { margin: 0; flex: 1 1 260px; }
+@media (min-width: 561px) { .tiles { grid-template-rows: repeat(3, auto); } .tile.play { grid-row: span 3; } }
 @media (max-width: 560px) {
   .tiles { grid-template-columns: 1fr 1fr; grid-template-rows: auto; }
   .tile.play { grid-column: span 2; grid-row: auto; min-height: 190px; }
+  #go-kids { grid-column: span 2; min-height: 0; flex-direction: row; align-items: center; justify-content: flex-start; gap: 14px; }
+  #go-kids .ic { margin-bottom: 0; }
 }
+/* Perfiles */
+.kids { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px; }
+.kid {
+  border: 2px solid var(--line); background: var(--surface); border-radius: 24px; padding: 18px 12px; display: flex; flex-direction: column;
+  align-items: center; gap: 8px; box-shadow: 0 6px 0 var(--line); transition: transform .12s;
+}
+.kid:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--line); }
+.kid .ava, .ava-big { width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center; font-size: 52px; line-height: 1; }
+.kid strong { font-family: var(--font-word); font-size: 1.5rem; line-height: 1.1; text-align: center; overflow-wrap: anywhere; }
+.who-tag { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; }
+.who-tag .ava { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-size: 22px; }
+.avatars { display: flex; flex-wrap: wrap; gap: 8px; }
+.avatars button { width: 52px; height: 52px; border-radius: 50%; border: 2px solid var(--line); background: var(--bg); font-size: 28px; line-height: 1; }
+.avatars button[aria-pressed="true"] { border-color: var(--accent); background: var(--surface); box-shadow: 0 0 0 3px var(--accent); }
+.checks { display: flex; flex-wrap: wrap; gap: 8px; }
+.checks label { display: inline-flex; align-items: center; gap: 8px; border: 2px solid var(--line); border-radius: 999px; padding: 8px 14px; font-weight: 700; background: var(--bg); }
+.checks input { width: 20px; height: 20px; accent-color: var(--accent); }
+.kid-row { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: start; }
+.kid-row .fields { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.kid-row .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+.end-name { font-family: var(--font-word); font-size: 1.6rem; margin: -10px 0 0; color: var(--muted); }
+@media (max-width: 560px) { .kid-row { grid-template-columns: 1fr; } .kid-row .ava-big { margin: 0 auto; } }
 
 /* Gate */
 .gate { max-width: 460px; width: 100%; margin: 0 auto; text-align: center; }
@@ -240,6 +265,7 @@ input[type=text], input[type=number], select {
       <button class="tile play" id="go-play" type="button"><span class="ic" aria-hidden="true"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="22" fill="currentColor" opacity=".12"/><path d="M19 14v20l16-10z" fill="currentColor"/></svg></span><strong>Jugar</strong><small>Mira el vídeo y elige la palabra</small></button>
       <button class="tile" id="go-add" type="button"><span class="ic" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="12" width="28" height="24" rx="6"/><path d="M32 21l11-6v18l-11-6"/><path d="M18 18v12M12 24h12"/></svg></span><strong>Agregar vídeos</strong><span class="lock">Para mayores</span></button>
       <button class="tile" id="go-edit" type="button"><span class="ic" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 38l3-10L31 10a4 4 0 0 1 7 7L20 35z"/><path d="M28 13l7 7"/><path d="M26 40h14"/></svg></span><strong>Modificar o borrar</strong><span class="lock">Para mayores</span></button>
+      <button class="tile" id="go-kids" type="button"><span class="ic" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="17" cy="17" r="7"/><circle cx="34" cy="20" r="5.5"/><path d="M4 40c1-8 6-12 13-12s12 4 13 12"/><path d="M31 31c6 0 11 3 12 9"/></svg></span><span><strong>Niños</strong> <span class="lock">Para mayores</span></span></button>
     </div>
     <div class="empty" id="h-empty" hidden>
       <p>Todavía no hay vídeos. Graba acciones con el móvil y añádelas en <b>Agregar vídeos</b>, o prueba ya el juego con cinco animaciones de ejemplo.</p>
@@ -298,9 +324,22 @@ input[type=text], input[type=number], select {
     <div id="edit-list" class="cat-group"></div>
   </section>
 
+  <!-- ¿Quién juega? -->
+  <section id="s-who" class="screen" hidden>
+    <div class="bar"><button class="back" data-home type="button">← Inicio</button><h2>¿Quién juega?</h2></div>
+    <div class="kids" id="who-list"></div>
+  </section>
+
+  <!-- Niños (para mayores) -->
+  <section id="s-kids" class="screen" hidden>
+    <div class="bar"><button class="back" data-home type="button">← Inicio</button><h2>Niños</h2></div>
+    <p class="note">Cada niño juega con los mismos vídeos, pero con sus propias categorías y ajustes. Si no hay ningún niño, el juego empieza directamente.</p>
+    <div id="kids-list" class="cat-group"></div>
+  </section>
+
   <!-- Preparar partida -->
   <section id="s-setup" class="screen" hidden>
-    <div class="bar"><button class="back" data-home type="button">← Inicio</button><h2>Preparar partida</h2></div>
+    <div class="bar"><button class="back" data-home type="button">← Inicio</button><h2>Preparar partida</h2><span class="who-tag" id="set-who" hidden></span></div>
     <div class="panel">
       <div class="field"><b>Categoría</b><div class="chips" id="set-cats"></div></div>
       <div class="field"><b>Alternativas</b><div class="seg" id="set-alts"></div><p class="note" id="set-alts-note"></p></div>
@@ -329,6 +368,7 @@ input[type=text], input[type=number], select {
     <div class="end">
       <div class="mono" id="mono-end"></div>
       <h1>¡Muy bien!</h1>
+      <p class="end-name" id="end-name" hidden></p>
       <div class="stars" id="end-stars"></div>
       <div class="row">
         <button class="btn" id="end-again" type="button">Jugar otra vez</button>
@@ -352,12 +392,15 @@ const sortEs = (a, b) => a.localeCompare(b, 'es');
 /* ---------- Almacén en el dispositivo (IndexedDB) ---------- */
 const store = (() => {
   let db = null;
-  const mem = { meta: new Map(), files: new Map() };
+  const mem = { meta: new Map(), files: new Map(), profiles: new Map() };
   function open() {
     return new Promise((res) => {
       try {
-        const r = indexedDB.open('juego-acciones', 1);
-        r.onupgradeneeded = () => { r.result.createObjectStore('meta', { keyPath: 'id' }); r.result.createObjectStore('files', { keyPath: 'id' }); };
+        const r = indexedDB.open('juego-acciones', 2);
+        r.onupgradeneeded = () => {
+          const names = r.result.objectStoreNames;
+          ['meta', 'files', 'profiles'].forEach((n) => { if (!names.contains(n)) r.result.createObjectStore(n, { keyPath: 'id' }); });
+        };
         r.onsuccess = () => { db = r.result; res(true); };
         r.onerror = () => res(false);
         r.onblocked = () => res(false);
@@ -377,6 +420,9 @@ const store = (() => {
     async putMeta(m) { if (!db) { mem.meta.set(m.id, m); return; } await run('meta', 'readwrite', (s) => s.put(m)); },
     async putFile(f) { if (!db) { mem.files.set(f.id, f); return; } await run('files', 'readwrite', (s) => s.put(f)); },
     async file(id) { return db ? run('files', 'readonly', (s) => s.get(id)) : mem.files.get(id); },
+    async profiles() { return db ? run('profiles', 'readonly', (s) => s.getAll()) : [...mem.profiles.values()]; },
+    async putProfile(p) { if (!db) { mem.profiles.set(p.id, p); return; } await run('profiles', 'readwrite', (s) => s.put(p)); },
+    async removeProfile(id) { if (!db) { mem.profiles.delete(id); return; } await run('profiles', 'readwrite', (s) => s.delete(id)); },
     async remove(id) {
       if (!db) { mem.meta.delete(id); mem.files.delete(id); return; }
       await run('meta', 'readwrite', (s) => s.delete(id)); await run('files', 'readwrite', (s) => s.delete(id));
@@ -628,18 +674,29 @@ async function editRow(it) {
 /* ---------- Preparar partida ---------- */
 const setup = { cat: null, alts: 3, phases: 5 };
 try { Object.assign(setup, JSON.parse(localStorage.getItem('juego-acciones-ajustes') || '{}')); } catch (e) {}
-const poolOf = (cat) => (cat === null ? items : items.filter((i) => i.category === cat));
+let kid = null;          // perfil que está jugando, o null si no hay perfiles
+const allowedCats = () => { const all = categories(); if (!kid || !kid.cats) return all; const ok = all.filter((c) => kid.cats.includes(c)); return ok.length ? ok : all; };
+const poolOf = (cat) => (cat === null ? items.filter((i) => allowedCats().includes(i.category)) : items.filter((i) => i.category === cat));
 const namesOf = (pool) => { const out = []; pool.forEach((i) => { if (!out.some((n) => same(n, i.name))) out.push(i.name); }); return out; };
 
 $('#go-play').addEventListener('click', async () => {
   await reload();
   if (!items.length) { toast('Primero hay que agregar vídeos o cargar los ejemplos.'); return; }
-  if (setup.cat !== null && !categories().includes(setup.cat)) setup.cat = null;
-  renderSetup(); show('s-setup');
+  const kids = await loadKids();
+  if (kids.length) { renderWho(kids); show('s-who'); return; }
+  kid = null; openSetup();
 });
+function openSetup() {
+  if (kid) Object.assign(setup, { cat: null, alts: 3, phases: 5 }, kid.setup || {});
+  else { Object.assign(setup, { cat: null, alts: 3, phases: 5 }); try { Object.assign(setup, JSON.parse(localStorage.getItem('juego-acciones-ajustes') || '{}')); } catch (e) {} }
+  if (setup.cat !== null && !allowedCats().includes(setup.cat)) setup.cat = null;
+  const tag = $('#set-who'); tag.hidden = !kid; tag.innerHTML = '';
+  if (kid) tag.append(avatarEl(kid), kid.name);
+  renderSetup(); show('s-setup');
+}
 function renderSetup() {
   const cats = $('#set-cats'); cats.innerHTML = '';
-  [[null, 'Todos'], ...categories().map((c) => [c, c])].forEach(([val, label]) => {
+  [[null, 'Todos'], ...allowedCats().map((c) => [c, c])].forEach(([val, label]) => {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.setAttribute('aria-pressed', String(setup.cat === val));
     if (val !== null) b.append(catDot(val)); b.append(label); const s = document.createElement('small'); s.textContent = poolOf(val).length; b.append(s);
     b.addEventListener('click', () => { setup.cat = val; renderSetup(); }); cats.append(b);
@@ -656,7 +713,8 @@ function renderSetup() {
   $('#set-phases').textContent = setup.phases;
   $('#set-minus').disabled = setup.phases <= 1; $('#set-plus').disabled = setup.phases >= pool.length;
   $('#set-phases-note').textContent = `Como mucho ${pool.length}, uno por cada vídeo.`;
-  try { localStorage.setItem('juego-acciones-ajustes', JSON.stringify(setup)); } catch (e) {}
+  if (kid) { kid.setup = { ...setup }; store.putProfile(kid).catch(() => {}); }
+  else { try { localStorage.setItem('juego-acciones-ajustes', JSON.stringify(setup)); } catch (e) {} }
 }
 $('#set-minus').addEventListener('click', () => { setup.phases--; renderSetup(); });
 $('#set-plus').addEventListener('click', () => { setup.phases++; renderSetup(); });
@@ -703,9 +761,74 @@ function finish() {
   const s = $('#end-stars'); s.innerHTML = '';
   game.rounds.forEach((_, i) => { const st = document.createElement('span'); st.textContent = '⭐'; st.style.animationDelay = `${0.15 + i * 0.12}s`; s.append(st); });
   const mono = $('#mono-end'); mono.classList.remove('cheer', 'hop'); void mono.offsetWidth; mono.classList.add('cheer', 'hop');
-  applause(2.4); confetti(); setTimeout(() => speak('¡Muy bien!'), 300);
+  const en = $('#end-name'); en.hidden = !kid; en.textContent = kid ? kid.name : '';
+  applause(2.4); confetti(); setTimeout(() => speak(kid ? `¡Muy bien, ${kid.name}!` : '¡Muy bien!'), 300);
 }
 $('#g-exit').addEventListener('click', goHome);
+
+/* ---------- Perfiles de niños ---------- */
+const AVATARS = ['🐵', '🐶', '🐱', '🦊', '🐼', '🐸', '🦁', '🐰', '🐻', '🐧', '🐢', '🦄'];
+async function loadKids() { try { return (await store.profiles()).sort((a, b) => a.created - b.created); } catch (e) { return []; } }
+function avatarEl(p, cls = 'ava') { const a = document.createElement('span'); a.className = cls; a.textContent = p.avatar; a.style.background = catColor(p.name || p.avatar); return a; }
+function renderWho(kids) {
+  const list = $('#who-list'); list.innerHTML = '';
+  kids.forEach((p) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'kid';
+    const n = document.createElement('strong'); n.textContent = p.name; b.append(avatarEl(p), n);
+    b.addEventListener('click', () => { kid = p; speak(p.name); openSetup(); });
+    list.append(b);
+  });
+}
+$('#go-kids').addEventListener('click', () => openGate(openKids));
+async function openKids() {
+  await reload(); const kids = await loadKids(); show('s-kids');
+  const list = $('#kids-list'); list.innerHTML = '';
+  list.append(kidRow(null));
+  if (kids.length) { const h = document.createElement('h3'); h.textContent = kids.length === 1 ? '1 niño' : `${kids.length} niños`; list.append(h); }
+  kids.forEach((p) => list.append(kidRow(p)));
+}
+function kidRow(p) {
+  const isNew = !p; p = p || { id: uid(), name: '', avatar: AVATARS[0], cats: null, created: Date.now() };
+  const row = document.createElement('div'); row.className = 'panel kid-row';
+  const big = avatarEl(p, 'ava-big');
+  const f = document.createElement('div'); f.className = 'fields';
+  f.innerHTML = `${isNew ? '<b>Añadir un niño</b>' : ''}<label class="field">Nombre<input type="text" maxlength="24" id="kn-${p.id}" autocomplete="off"></label>
+    <div class="field"><b>Animal</b><div class="avatars"></div></div>
+    <div class="field"><b>Categorías que juega</b><div class="checks"></div></div>
+    <p class="msg" style="min-height:0"></p>
+    <div class="actions">${isNew ? '' : '<button class="btn ghost" type="button" data-act="del">Borrar</button>'}<button class="btn" type="button" data-act="save">${isNew ? 'Añadir' : 'Guardar cambios'}</button></div>`;
+  row.append(big, f);
+  const name = f.querySelector('input'), msg = f.querySelector('.msg');
+  name.value = p.name;
+  let avatar = p.avatar;
+  const av = f.querySelector('.avatars');
+  AVATARS.forEach((e) => {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = e; b.setAttribute('aria-label', 'Animal ' + e); b.setAttribute('aria-pressed', String(e === avatar));
+    b.addEventListener('click', () => { avatar = e; big.textContent = e; av.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); });
+    av.append(b);
+  });
+  const checks = f.querySelector('.checks'); const cats = categories();
+  if (!cats.length) checks.innerHTML = '<span class="note">Todavía no hay categorías. Cuando agregues vídeos aparecerán aquí.</span>';
+  cats.forEach((c) => {
+    const l = document.createElement('label'); const i = document.createElement('input'); i.type = 'checkbox'; i.value = c; i.checked = !p.cats || p.cats.includes(c);
+    l.append(i, catDot(c), c); checks.append(l);
+  });
+  name.addEventListener('input', () => { big.style.background = catColor(norm(name.value) || avatar); });
+  f.querySelector('[data-act=save]').addEventListener('click', async () => {
+    const n = norm(name.value); if (!n) return (msg.textContent = 'Escribe el nombre del niño.');
+    const chosen = [...checks.querySelectorAll('input:checked')].map((i) => i.value);
+    if (cats.length && !chosen.length) return (msg.textContent = 'Marca al menos una categoría.');
+    const all = chosen.length === cats.length;
+    await store.putProfile({ ...p, name: n, avatar, cats: all ? null : chosen });
+    toast(isNew ? `Añadido ${n}` : 'Cambios guardados'); openKids();
+  });
+  const del = f.querySelector('[data-act=del]'); let armed = false;
+  if (del) del.addEventListener('click', async () => {
+    if (!armed) { armed = true; del.textContent = `¿Borrar a ${p.name}? Toca otra vez`; del.className = 'btn danger'; setTimeout(() => { if (armed) { armed = false; del.textContent = 'Borrar'; del.className = 'btn ghost'; } }, 4000); return; }
+    await store.removeProfile(p.id); toast(`Borrado ${p.name}. Sus vídeos siguen guardados.`); openKids();
+  });
+  return row;
+}
 
 /* ---------- Adornos: mono, colores de categoría y confeti ---------- */
 const MONO = `<svg viewBox="0 0 120 128" aria-hidden="true">
